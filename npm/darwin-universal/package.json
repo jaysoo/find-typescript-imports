@@ -1,0 +1,15 @@
+{
+  "name": "find-typescript-imports-darwin-universal",
+  "version": "0.0.0",
+  "os": [
+    "darwin"
+  ],
+  "main": "find-typescript-imports.darwin-universal.node",
+  "files": [
+    "find-typescript-imports.darwin-universal.node"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">= 10"
+  }
+}

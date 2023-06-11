@@ -1,0 +1,23 @@
+[package]
+edition = "2021"
+name = "find-typescript-imports"
+version = "0.0.1"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+futures = "0.3"
+napi = { version = "2.12.2", default-features = false, features = ["napi4","tokio_rt"] }
+napi-derive = "2.12.2"
+tokio = { version = "1", features = ["default", "fs"] }
+swc_common = "0.31.12"
+swc_ecma_parser = "0.134.12"
+swc_ecma_visit = "0.90.5"
+swc_ecma_ast = "0.104.5"
+
+[build-dependencies]
+napi-build = "2.0.1"
+
+[profile.release]
+lto = true
