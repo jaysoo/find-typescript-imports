@@ -19,7 +19,7 @@ use swc_ecma_parser::{
   Parser,
   Syntax,
   StringInput,
-  EsConfig
+  TsConfig
 };
 use swc_ecma_visit::{Visit,VisitWith};
 use swc_ecma_ast::{ImportDecl};
@@ -36,15 +36,16 @@ impl Visit for ImportVisitor {
 
 async fn process_file(file_path: String) -> Vec<String> {
     let content = read_to_string(&file_path).await;
+    let file_path_2 = file_path.clone();
     match content {
       Ok(source) => {
         let cm: Lrc<SourceMap> = Default::default();
         let fm = cm.new_source_file(FileName::Real(file_path.into()), source.clone());
 
         let lexer = Lexer::new(
-          Syntax::Es(EsConfig {
-            jsx: true,
-            ..EsConfig::default()
+          Syntax::Typescript(TsConfig {
+            tsx: false,
+            ..TsConfig::default()
           }),
           Default::default(),
           StringInput::from(&*fm),
@@ -53,20 +54,24 @@ async fn process_file(file_path: String) -> Vec<String> {
 
         let mut parser = Parser::new_from(lexer);
 
-        let module = parser.parse_module().unwrap();
+        let result = parser.parse_module();
+        match result {
+          Ok(module) => {
+            let mut visitor = ImportVisitor { imports: vec![] };
+            module.visit_with(&mut visitor);
 
-        let mut visitor = ImportVisitor { imports: vec![] };
-        module.visit_with(&mut visitor);
-
-        let mut file_imports: Vec<String> = vec![];
-        for import_decl in visitor.imports {
-            let span = import_decl.span;
-          let start = (span.lo().0 - 1) as usize;
-          let end = span.hi().0 as usize;
-          let import_text = source[start..end].to_string();
-          file_imports.push(import_text);
+            let mut file_imports: Vec<String> = vec![];
+            for import_decl in visitor.imports {
+                let span = import_decl.span;
+              let start = (span.lo().0 - 1) as usize;
+              let end = span.hi().0 as usize;
+              let import_text = source[start..end].to_string();
+              file_imports.push(format!("{}: {}", file_path_2, import_text));
+            }
+            file_imports
+          },
+          Err(_) =>  vec![]
         }
-        file_imports
       },
       Err(_) => vec![]
     }
