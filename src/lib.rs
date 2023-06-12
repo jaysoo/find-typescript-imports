@@ -1,5 +1,7 @@
 #[macro_use]
 extern crate napi_derive;
+extern crate futures;
+extern crate tokio;
 extern crate swc_common;
 extern crate swc_ecma_parser;
 extern crate swc_ecma_visit;
@@ -19,9 +21,8 @@ use swc_ecma_parser::{
   StringInput,
   EsConfig
 };
-use swc_ecma_visit::{Visit};
-use swc_ecma_ast::{ImportDecl, Invalid};
-use swc_common::DUMMY_SP;
+use swc_ecma_visit::{Visit,VisitWith};
+use swc_ecma_ast::{ImportDecl};
 
 struct ImportVisitor {
     pub imports: Vec<ImportDecl>,
@@ -36,9 +37,9 @@ impl Visit for ImportVisitor {
 async fn process_file(file_path: String) -> Vec<String> {
     let content = read_to_string(&file_path).await;
     match content {
-      Ok(value) => {
+      Ok(source) => {
         let cm: Lrc<SourceMap> = Default::default();
-        let fm = cm.new_source_file(FileName::Real(file_path.into()), value);
+        let fm = cm.new_source_file(FileName::Real(file_path.into()), source.clone());
 
         let lexer = Lexer::new(
           Syntax::Es(EsConfig {
@@ -55,15 +56,19 @@ async fn process_file(file_path: String) -> Vec<String> {
         let module = parser.parse_module().unwrap();
 
         let mut visitor = ImportVisitor { imports: vec![] };
-        module.visit_module(&Invalid { span: DUMMY_SP }, &mut visitor);
+        module.visit_with(&mut visitor);
 
-        let mut file_imports: Vec<String> = Vec::new();
-        for import in visitor.imports {
-            file_imports.push(format!("{:?}", import));
+        let mut file_imports: Vec<String> = vec![];
+        for import_decl in visitor.imports {
+            let span = import_decl.span;
+          let start = (span.lo().0 - 1) as usize;
+          let end = span.hi().0 as usize;
+          let import_text = source[start..end].to_string();
+          file_imports.push(import_text);
         }
         file_imports
       },
-      Err(_) => Vec::new()
+      Err(_) => vec![]
     }
 }
 
