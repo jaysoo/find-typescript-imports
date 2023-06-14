@@ -98,7 +98,7 @@ fn process_file(file_path: String, callback: &mut ThreadsafeFunction<ImportResul
 #[napi]
 fn find_imports(
     file_paths: Vec<String>,
-    #[napi(ts_arg_type = "(result: {file: string, importExpr: string}) => void")]
+    #[napi(ts_arg_type = "(obj: null, result: {file: string, importExpr: string}) => void")]
     callback: JsFunction
 ) -> Result<()> {
     let thread_safe_callback: ThreadsafeFunction<ImportResult> =
