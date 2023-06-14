@@ -63,7 +63,7 @@ impl Visit for ImportVisitor<'_> {
 
 fn process_file(file_path: String, callback: &mut ThreadsafeFunction<ImportResult>) -> () {
     let file = file_path.clone();
-    let tsx = file_path.ends_with(".tsx");
+    let tsx = file_path.ends_with(".tsx") || file_path.ends_with(".jsx");
     let content = read_to_string(&file_path);
 
     match content {
