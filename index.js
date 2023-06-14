@@ -252,6 +252,7 @@ if (!nativeBinding) {
   throw new Error(`Failed to load native binding`)
 }
 
-const { findImports } = nativeBinding
+const { ImportResult, findImports } = nativeBinding
 
+module.exports.ImportResult = ImportResult
 module.exports.findImports = findImports
